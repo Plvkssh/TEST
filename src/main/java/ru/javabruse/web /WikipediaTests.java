@@ -1,0 +1,93 @@
+package ru.javabruse.web;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.WebDriver;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import ru.javabruse.pages.WikipediaPage;
+import ru.javabruse.utils.WebDriverFactory;
+
+/**
+ * Тесты для веб-версии Википедии.
+ * Проверяют основные функции главной страницы и поиска.
+ */
+public class WikipediaTests {
+
+    private static final String WIKIPEDIA_BASE_URL = "https://ru.wikipedia.org/";
+    private static final String RUSSIA_SEARCH_QUERY = "Россия";
+    private static final String RUSSIA_ARTICLE_TITLE = "Россия";
+
+    private WebDriver driver;
+    private WikipediaPage wikipediaPage;
+
+    @BeforeMethod
+    public void setUp() {
+        initializeWebDriver();
+        openWikipediaHomePage();
+        createPageObject();
+    }
+
+    private void initializeWebDriver() {
+        WebDriverManager.chromedriver().setup();
+        driver = WebDriverFactory.createChromeDriver();
+        driver.manage().window().maximize();
+    }
+
+    private void openWikipediaHomePage() {
+        driver.get(WIKIPEDIA_BASE_URL);
+    }
+
+    private void createPageObject() {
+        wikipediaPage = new WikipediaPage(driver);
+    }
+
+    @Test
+    public void mainPageShouldLoadSuccessfully() {
+        boolean isMainPageLoaded = wikipediaPage.isMainPageDisplayed();
+        
+        Assert.assertTrue(isMainPageLoaded, 
+                         "Main Wikipedia page should load and display content correctly");
+    }
+
+    @Test
+    public void shouldFindArticleWhenSearchingForRussia() {
+        wikipediaPage.search(RUSSIA_SEARCH_QUERY);
+        
+        String actualTitle = wikipediaPage.getArticleTitle();
+        
+        Assert.assertEquals(actualTitle, RUSSIA_ARTICLE_TITLE,
+                          String.format("Article title should be '%s'. Actual: %s", 
+                                       RUSSIA_ARTICLE_TITLE, actualTitle));
+    }
+
+    @Test
+    public void shouldNavigateToDifferentPageWhenClickingRandomLink() {
+        wikipediaPage.isMainPageDisplayed();
+        String initialUrl = driver.getCurrentUrl();
+
+        wikipediaPage.openRandomPage();
+        String newUrl = driver.getCurrentUrl();
+
+        Assert.assertNotEquals(newUrl, initialUrl,
+                             "URL should change after clicking random page link");
+    }
+
+    @Test
+    public void searchFieldShouldBeAvailableOnMainPage() {
+        wikipediaPage.isMainPageDisplayed();
+        
+        boolean isSearchFieldFunctional = wikipediaPage.isSearchFieldAvailable();
+        
+        Assert.assertTrue(isSearchFieldFunctional,
+                         "Search field should be visible and enabled for interaction");
+    }
+
+    @AfterMethod
+    public void cleanUp() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
