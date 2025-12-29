@@ -26,7 +26,7 @@ public class WikipediaTests {
     public void setUp() {
         initializeWebDriver();
         openWikipediaHomePage();
-        createPageObject();
+        wikipediaPage = new WikipediaPage(driver);
     }
 
     private void initializeWebDriver() {
@@ -39,16 +39,12 @@ public class WikipediaTests {
         driver.get(WIKIPEDIA_BASE_URL);
     }
 
-    private void createPageObject() {
-        wikipediaPage = new WikipediaPage(driver);
-    }
-
     @Test
     public void mainPageShouldLoadSuccessfully() {
         boolean isMainPageLoaded = wikipediaPage.isMainPageDisplayed();
         
         Assert.assertTrue(isMainPageLoaded, 
-                         "Main Wikipedia page should load and display content correctly");
+                         "Главная страница Википедии должна загружаться корректно");
     }
 
     @Test
@@ -58,7 +54,7 @@ public class WikipediaTests {
         String actualTitle = wikipediaPage.getArticleTitle();
         
         Assert.assertEquals(actualTitle, RUSSIA_ARTICLE_TITLE,
-                          String.format("Article title should be '%s'. Actual: %s", 
+                          String.format("Заголовок статьи должен быть '%s'. Фактический: %s", 
                                        RUSSIA_ARTICLE_TITLE, actualTitle));
     }
 
@@ -71,7 +67,7 @@ public class WikipediaTests {
         String newUrl = driver.getCurrentUrl();
 
         Assert.assertNotEquals(newUrl, initialUrl,
-                             "URL should change after clicking random page link");
+                             "URL должен измениться после открытия случайной статьи");
     }
 
     @Test
@@ -81,11 +77,11 @@ public class WikipediaTests {
         boolean isSearchFieldFunctional = wikipediaPage.isSearchFieldAvailable();
         
         Assert.assertTrue(isSearchFieldFunctional,
-                         "Search field should be visible and enabled for interaction");
+                         "Поле поиска должно быть доступно для использования");
     }
 
     @AfterMethod
-    public void cleanUp() {
+    public void tearDown() {
         if (driver != null) {
             driver.quit();
         }
