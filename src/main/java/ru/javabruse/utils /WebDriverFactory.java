@@ -10,29 +10,43 @@ import java.net.URL;
 import java.time.Duration;
 
 /**
- * Фабрика для создания экземпляров WebDriver с различными конфигурациями.
- * Предоставляет готовые настройки для Chrome и Android драйверов.
+ * Фабрика для создания и настройки драйверов WebDriver.
+ * Поддерживает создание ChromeDriver для веб-тестов и AndroidDriver для мобильных тестов.
  */
 public class WebDriverFactory {
     
-    private static final Duration DEFAULT_IMPLICIT_WAIT = Duration.ofSeconds(5);
+    private static final Duration IMPLICIT_WAIT = Duration.ofSeconds(5);
     private static final String APPIUM_SERVER_URL = "http://127.0.0.1:4723";
-    private static final String WIKIPEDIA_APP_PACKAGE = "org.wikipedia.alpha";
-    private static final String WIKIPEDIA_MAIN_ACTIVITY = "org.wikipedia.main.MainActivity";
+    private static final String WIKIPEDIA_PACKAGE = "org.wikipedia.alpha";
+    private static final String WIKIPEDIA_ACTIVITY = "org.wikipedia.main.MainActivity";
+    
+    private static final String PLATFORM_ANDROID = "Android";
+    private static final String AUTOMATION_UIAUTOMATOR2 = "UiAutomator2";
+    private static final String EMULATOR_NAME = "Android Emulator";
+
+    private WebDriverFactory() {
+        // Приватный конструктор для утилитного класса
+    }
 
     /**
      * Создает и настраивает ChromeDriver для веб-тестирования.
-     * 
-     * @return настроенный экземпляр ChromeDriver
      */
     public static WebDriver createChromeDriver() {
-        ChromeOptions options = configureChromeOptions();
+        ChromeOptions options = createChromeOptions();
         WebDriver driver = new ChromeDriver(options);
-        configureDriverTimeouts(driver);
+        configureTimeouts(driver);
         return driver;
     }
 
-    private static ChromeOptions configureChromeOptions() {
+    /**
+     * Создает и настраивает AndroidDriver для тестирования мобильного приложения.
+     */
+    public static AndroidDriver createAndroidDriver() throws Exception {
+        DesiredCapabilities capabilities = createAndroidCapabilities();
+        return new AndroidDriver(new URL(APPIUM_SERVER_URL), capabilities);
+    }
+
+    private static ChromeOptions createChromeOptions() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--start-maximized");
         options.addArguments("--disable-notifications");
@@ -40,31 +54,20 @@ public class WebDriverFactory {
         return options;
     }
 
-    private static void configureDriverTimeouts(WebDriver driver) {
-        driver.manage().timeouts().implicitlyWait(DEFAULT_IMPLICIT_WAIT);
-    }
-
-    /**
-     * Создает и настраивает AndroidDriver для мобильного тестирования Wikipedia приложения.
-     * 
-     * @return настроенный экземпляр AndroidDriver
-     * @throws Exception если не удается подключиться к Appium серверу
-     */
-    public static AndroidDriver createAndroidDriver() throws Exception {
-        DesiredCapabilities capabilities = configureAndroidCapabilities();
-        return new AndroidDriver(new URL(APPIUM_SERVER_URL), capabilities);
-    }
-
-    private static DesiredCapabilities configureAndroidCapabilities() {
+    private static DesiredCapabilities createAndroidCapabilities() {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         
-        capabilities.setCapability("platformName", "Android");
-        capabilities.setCapability("deviceName", "Android Emulator");
-        capabilities.setCapability("automationName", "UiAutomator2");
-        capabilities.setCapability("appPackage", WIKIPEDIA_APP_PACKAGE);
-        capabilities.setCapability("appActivity", WIKIPEDIA_MAIN_ACTIVITY);
+        capabilities.setCapability("platformName", PLATFORM_ANDROID);
+        capabilities.setCapability("deviceName", EMULATOR_NAME);
+        capabilities.setCapability("automationName", AUTOMATION_UIAUTOMATOR2);
+        capabilities.setCapability("appPackage", WIKIPEDIA_PACKAGE);
+        capabilities.setCapability("appActivity", WIKIPEDIA_ACTIVITY);
         capabilities.setCapability("noReset", false);
         
         return capabilities;
+    }
+
+    private static void configureTimeouts(WebDriver driver) {
+        driver.manage().timeouts().implicitlyWait(IMPLICIT_WAIT);
     }
 }
