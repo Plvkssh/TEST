@@ -29,7 +29,7 @@ public class WikipediaMobileTests {
     }
 
     @AfterMethod
-    public void cleanUp() {
+    public void tearDown() {
         if (driver != null) {
             driver.quit();
         }
@@ -39,50 +39,69 @@ public class WikipediaMobileTests {
     public void searchFieldShouldBeVisibleOnMainScreen() {
         boolean isSearchFieldDisplayed = wikipediaApp.isSearchContainerDisplayed();
         
-        log("Search field visibility: " + isSearchFieldDisplayed);
+        logTestStep("Поисковое поле отображается: " + isSearchFieldDisplayed);
         Assert.assertTrue(isSearchFieldDisplayed, 
-                         "Search field should be visible on main screen");
+                         "Поисковое поле должно быть видно на главном экране");
     }
 
     @Test(priority = 2)
     public void shouldOpenArticleWhenSearchingForAppium() throws InterruptedException {
         wikipediaApp.searchArticle("Appium");
-        Thread.sleep(ARTICLE_LOAD_WAIT_MS);
+        waitForArticleToLoad();
 
         String articleTitle = wikipediaApp.getArticleTitle();
-        log("Article title: '" + articleTitle + "'");
+        logTestStep("Заголовок статьи: '" + articleTitle + "'");
 
-        assertArticleTitleIsValid(articleTitle, "Appium");
+        validateArticleTitle(articleTitle, "Appium");
     }
 
     @Test(priority = 3)
     public void shouldReturnToMainScreenAfterOpeningArticle() throws InterruptedException {
         wikipediaApp.searchArticle("Selenium");
-        Thread.sleep(ARTICLE_LOAD_WAIT_MS);
+        waitForArticleToLoad();
 
         String articleTitle = wikipediaApp.getArticleTitle();
-        log("Opened article: " + articleTitle);
+        logTestStep("Открыта статья: " + articleTitle);
 
         wikipediaApp.navigateBack();
         Thread.sleep(SHORT_WAIT_MS);
 
         boolean isMainScreenDisplayed = wikipediaApp.isSearchContainerDisplayed();
         Assert.assertTrue(isMainScreenDisplayed, 
-                         "Main screen with search field should be visible after navigation back");
+                         "После возврата должен отображаться главный экран с поисковым полем");
     }
 
-    private void assertArticleTitleIsValid(String actualTitle, String expectedKeyword) {
-        Assert.assertNotNull(actualTitle, "Article title should not be null");
-        Assert.assertFalse(actualTitle.isEmpty(), "Article title should not be empty");
+    /**
+     * Проверяет, что заголовок статьи соответствует ожидаемому ключевому слову.
+     * 
+     * @param actualTitle фактический заголовок статьи
+     * @param expectedKeyword ожидаемое ключевое слово в заголовке
+     */
+    private void validateArticleTitle(String actualTitle, String expectedKeyword) {
+        Assert.assertNotNull(actualTitle, "Заголовок статьи не должен быть null");
+        Assert.assertFalse(actualTitle.isEmpty(), "Заголовок статьи не должен быть пустым");
         
         String lowercaseTitle = actualTitle.toLowerCase();
         String lowercaseKeyword = expectedKeyword.toLowerCase();
         Assert.assertTrue(lowercaseTitle.contains(lowercaseKeyword),
-                        String.format("Article title should contain '%s'. Actual: %s", 
+                        String.format("Заголовок статьи должен содержать '%s'. Фактический: %s", 
                                      expectedKeyword, actualTitle));
     }
 
-    private void log(String message) {
-        System.out.println(message);
+    /**
+     * Выводит информационное сообщение о ходе выполнения теста.
+     * 
+     * @param message сообщение для логирования
+     */
+    private void logTestStep(String message) {
+        System.out.println("[TEST LOG] " + message);
+    }
+
+    /**
+     * Ожидает загрузки статьи.
+     * Использует стандартное время ожидания загрузки статьи.
+     */
+    private void waitForArticleToLoad() throws InterruptedException {
+        Thread.sleep(ARTICLE_LOAD_WAIT_MS);
     }
 }
