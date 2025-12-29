@@ -9,12 +9,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 /**
- * Page Object Model для главной страницы Википедии.
- * Предоставляет методы для взаимодействия с основными элементами страницы.
+ * Page Object для главной страницы Википедии.
+ * Инкапсулирует взаимодействие с основными элементами веб-интерфейса.
  */
 public class WikipediaPage {
 
-    private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofSeconds(15);
+    private static final Duration WAIT_TIMEOUT = Duration.ofSeconds(15);
     private static final String MAIN_PAGE_URL = "https://ru.wikipedia.org/wiki/Заглавная_страница";
 
     private final WebDriver driver;
@@ -26,23 +26,27 @@ public class WikipediaPage {
     private final By articleHeading = By.id("firstHeading");
     private final By randomPageLink = By.id("n-randompage");
     private final By bodyContent = By.id("bodyContent");
+    private final By searchButton = By.id("searchButton");
 
     public WikipediaPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, DEFAULT_WAIT_TIMEOUT);
+        this.wait = new WebDriverWait(driver, WAIT_TIMEOUT);
     }
 
     /**
-     * Открывает главную страницу и проверяет отображение основного контента.
-     *
-     * @return true если логотип и основной контент отображаются корректно
+     * Открывает главную страницу Википедии.
      */
-    public boolean isMainPageDisplayed() {
+    public void open() {
         driver.get(MAIN_PAGE_URL);
-        
+    }
+
+    /**
+     * Проверяет, что главная страница загружена корректно.
+     */
+    public boolean isLoaded() {
         try {
-            wait.until(ExpectedConditions.visibilityOfElementLocated(logo));
-            WebElement content = wait.until(ExpectedConditions.visibilityOfElementLocated(bodyContent));
+            waitForLogo();
+            WebElement content = waitForBodyContent();
             return content.isDisplayed();
         } catch (Exception e) {
             return false;
@@ -50,43 +54,59 @@ public class WikipediaPage {
     }
 
     /**
-     * Выполняет поиск по указанному запросу.
-     *
-     * @param searchQuery текст для поиска
+     * Выполняет поиск статьи по указанному запросу.
      */
     public void search(String searchQuery) {
-        WebElement searchField = wait.until(ExpectedConditions.visibilityOfElementLocated(searchInput));
+        WebElement searchField = waitForSearchInput();
         searchField.clear();
         searchField.sendKeys(searchQuery);
         searchField.submit();
     }
 
     /**
-     * Получает заголовок текущей статьи.
-     *
-     * @return текст заголовка статьи
+     * Получает заголовок текущей отображаемой статьи.
      */
     public String getArticleTitle() {
-        WebElement heading = wait.until(ExpectedConditions.visibilityOfElementLocated(articleHeading));
+        WebElement heading = waitForArticleHeading();
         return heading.getText().trim();
     }
 
     /**
-     * Открывает случайную страницу Википедии.
+     * Открывает случайную статью Википедии.
      */
-    public void openRandomPage() {
-        WebElement randomLink = wait.until(ExpectedConditions.elementToBeClickable(randomPageLink));
+    public void openRandomArticle() {
+        WebElement randomLink = waitForClickableRandomLink();
         randomLink.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(bodyContent));
+        waitForBodyContent();
     }
 
     /**
-     * Проверяет доступность поля поиска.
-     *
-     * @return true если поле поиска отображается и активно для ввода
+     * Проверяет доступность поиска на странице.
      */
-    public boolean isSearchFieldAvailable() {
-        WebElement searchField = wait.until(ExpectedConditions.visibilityOfElementLocated(searchInput));
+    public boolean isSearchAvailable() {
+        WebElement searchField = waitForSearchInput();
         return searchField.isDisplayed() && searchField.isEnabled();
+    }
+
+    // Приватные вспомогательные методы для работы с элементами
+
+    private void waitForLogo() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(logo));
+    }
+
+    private WebElement waitForBodyContent() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(bodyContent));
+    }
+
+    private WebElement waitForSearchInput() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(searchInput));
+    }
+
+    private WebElement waitForArticleHeading() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(articleHeading));
+    }
+
+    private WebElement waitForClickableRandomLink() {
+        return wait.until(ExpectedConditions.elementToBeClickable(randomPageLink));
     }
 }
